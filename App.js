@@ -1,31 +1,54 @@
 import React from 'react';
 import { StyleSheet, Text, View, Button } from 'react-native';
-import GenerateButton from './Components/GenerateButton'
-import TabBar from './Components/TabBar'
+import PersonButton from './Components/PersonButton'
 
 export default class App extends React.Component {
   constructor(props) {
     super(props)
-    const quotes = {
-      'quote': 'Welcome to Quiplrr!  To begin, select a Quiplrr bot from the drop-down menu and click generate to witness synthetic text.',
-      'source': '- Quiplrr'
-    }
-    this.state = { quotes }
+    this.state = {'quote': '', 'source': '', 'is_real_sentence': '', 'result': ''}
+    this.getQuote()
   }
 
-  updateQuotes(quotes = {quote, source}) {
-    this.setState({ quotes })
+  getQuote(){
+    return (
+      fetch('http://www.quiplrr.com/quiplrr/games/generate?source=trumplrr',{
+        headers: {
+          Accept: 'application/json'
+        }
+      })
+      .then((response) => response.json())
+      .then((responseJson) => {
+        this.setState({ 'quote': responseJson['quote'], 'source': responseJson['source'], 'is_real_sentence': responseJson['is_real_sentence'] })
+      })
+      .catch(e => console.log('error', e))
+    )
+  }
+
+  checkAnswer(person) {
+    answerKey = {
+      'Trump': true,
+      'Trumplrr': false
+    }
+    if (this.state.is_real_sentence === answerKey[person]) {
+      result = 'Correct!'
+    } else {
+      result = 'Incorrect!'
+    }
+    this.getQuote()
+    this.setState({ result })
+  }
+
+  updateQuotes(quote, source, is_real_sentence) {
+    this.setState({ quote, source, is_real_sentence })
   }
 
   render() {
     return (
       <View style={styles.container}>
+        <Text style={styles.paragraph}> {this.state.result} </Text>
+        <Text style={styles.paragraph}> {this.state.quote} </Text>
+        <PersonButton updateQuotes={this.updateQuotes.bind(this)} checkAnswer={this.checkAnswer.bind(this)}/>
 
-        <Text style={styles.paragraph}> {this.state.quotes.quote} </Text>
-        <Text style={styles.paragraph}> {this.state.quotes.source} </Text>
-        <GenerateButton updateQuotes={this.updateQuotes.bind(this)}/>
-
-        <TabBar />
       </View>
     );
   }
